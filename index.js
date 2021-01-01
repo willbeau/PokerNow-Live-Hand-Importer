@@ -1,29 +1,22 @@
+var multiplier = 1;
 
 console.log('Poker Now Hand Grabber Running!');
-
 startHandImporter();
 
 var smallBlind;
-
 var bigBlind;
-
-var multiplier = 1;
-
-var heroName = "lavincey";
 
 function startHandImporter(){
   let blinds = document.getElementsByClassName('blind-value');
-  
   if (blinds.length) {
-
     //game loaded, we can run program now
-   // saveText("Hello","pokernow_hands\\test.txt");
     winObserver = createDealerObserver();
 
     updateBlinds();
 
     ProcessLastHand();
 
+    getHeroName();
   } else {
     setTimeout(startHandImporter, 350); // try again in 350 milliseconds
   }
@@ -41,9 +34,9 @@ const ProcessLastHand = async() => {
   hand.rawLog = log;
   hand.smallBlind = smallBlind;
   hand.bigBlind = bigBlind;
-  hand.heroName = heroName;
   hand.multiplier = multiplier;
   hand.tableID = getTableID();
+  hand.heroName =getHeroName();
   hand.convertToPokerStarsFormat();
 }
 
@@ -62,7 +55,6 @@ const fetchLastLog = async () => {
   if (!log.includes("ending hand") || !log.includes("starting hand") || !log.includes("(No Limit Texas Hold'em)")) {
     return;
   }
-
   return log;
 }
 
@@ -143,3 +135,12 @@ function fixCards(str){
 function round(value, decimals) {
   return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
  }   
+ function getHeroName(){
+   for(let i = 0; i <=10; i++){
+     let seat = document.getElementsByClassName("table-player table-player-" + i +  " you-player ");
+     if(seat.length == 1){
+       return(seat[0].getElementsByClassName("table-player-name")[0].innerText);
+     }
+   }
+   return "";
+ }
