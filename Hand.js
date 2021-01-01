@@ -276,13 +276,16 @@ class Hand {
                 startP = line.lastIndexOf(" bets ") + 6;
                 if(line.includes("and go all in")){
                     endP = line.lastIndexOf("and go all in") - 1;
+                    let betSize = round(line.substring(startP, endP),2); //amount the player bet
+                    this.betSize = betSize;
+                    action = player.name + ": bets $" + betSize + " and is all-in";
                 }else{
                     endP = line.length;
+                    let betSize = round(line.substring(startP, endP),2); //amount the player bet
+                    this.betSize = betSize;
+                    action = player.name + ": bets $" + betSize;
                 }
                 
-                let betSize = round(line.substring(startP, endP),2); //amount the player bet
-                this.betSize = betSize;
-                action = player.name + ": bets $" + betSize;
             } else if (line.includes(" shows a ")) {
                 //player shows their hand
                 startP = line.lastIndexOf(" shows a ") + 9;
