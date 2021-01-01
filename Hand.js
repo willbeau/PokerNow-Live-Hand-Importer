@@ -47,7 +47,6 @@ class Hand {
         this.setVariables();
         console.log(this.log);
         this.processLog();
-
         //sets hand headers
         this.output = "PokerStars Hand #" + this.handID + ": Hold'em No Limit ($" + this.smallBlind + "/$" + this.bigBlind + " USD) - " + this.time + " GMT" + '\n';
         this.output += "Table 'PokerNowLiveImporter' 10-max Seat #" + this.buttonSeat + " is the button" + '\n';
@@ -161,7 +160,7 @@ class Hand {
         }
         
         console.log(this.output);
-        saveText(this.output,"pokernow_hands\\" + this.handID + ".txt")
+        saveText(this.output,"pokernow_hands\\" + this.smallBlind + "-" + this.bigBlind + " " + this.tableID + "-" + this.handNumber + ".txt")
     }
     processLog() {
         //iterate through each line in the log
@@ -201,14 +200,17 @@ class Hand {
                 player.didBet = true;
                 player.smallBlind = true;
                 player.betSize = player.blindAmount;
+
+                this.blindCount++;
                 //Sets previous player to be the button (we check in case the player has less then 1 blind)
-                let index = player.index;
+                /*let index = player.index;
                 index--;
                 if (index == -1) {
                     index = this.players.length - 1;
                 }
                 this.players[index].button = true;
                 this.buttonSeat = this.players[index].seat;
+                */
             } else if (line.includes("big blind")) {
                 //big blind
                 //gets how much player posted for the blind (we check in case the player has less then 1 blind)
@@ -218,6 +220,8 @@ class Hand {
                 player.blindAmount = parseFloat(line.substring(startP, endP));
                 player.betSize = player.blindAmount;
                 player.bigBlind = true;
+
+                this.blindCount ++;
             } else if (line.includes("Your hand is ")) {
                 startP = 13;
                 endP = line.length;
@@ -294,13 +298,14 @@ class Hand {
                 endP = line.indexOf("from pot", startP) - 1;
                 let collectAmount = round(line.substring(startP, endP),2);
                 action = player.name + ": collected $" + collectAmount
-                this.potSize = collectAmount;
+                this.potSize += collectAmount;
                 this.hasEnded = true;
                 player.won = true;
-                player.winAmount = collectAmount;
+                player.winAmount += collectAmount;
             }
+
             //player is the last to act preflop - thus the button
-            if(this.street = 0 && this.acted == this.players.length - this.blindCount){
+            if(this.street == 0 && this.acted == (this.players.length - this.blindCount) && typeof player != 'undefined'){
                 this.buttonSeat = player.seat;
                 player.button = true;
             }
@@ -427,13 +432,13 @@ class Hand {
         let startP = this.rawLog.indexOf("-- starting hand #") + 18;
         startP = this.rawLog.indexOf('"at":"', startP) + 6;
         let endP = this.rawLog.indexOf('.', startP);
-        this.time = this.rawLog.substring(startP, endP).replace("-", "/").replace("-", "/").replace("T", " ");
+        this.time = this.rawLog.substring(startP, endP).replaceAll("-", "/").replaceAll("T", " ");
     }
     //Gets hand number
     setHandNumber() {
         let startP = this.rawLog.indexOf("-- starting hand #") + 18;
         let endP = this.rawLog.indexOf("(", startP);
-        this.handNumber = this.rawLog.substring(startP, endP).replace(" ", "");
+        this.handNumber = this.rawLog.substring(startP, endP).replaceAll(" ", "");
     }
     //Sets hand ID by concatinating the table ID and the hand Number and converting it to an integer
     setHandID() {

@@ -99,6 +99,7 @@ function convertToNumber(str) {
 //Save any text to downloads file
 const saveText = (saveText, saveLocation) => {
   console.log("Saving file");
+  console.log(saveLocation);
   chrome.runtime.sendMessage({ method: "saveText", text: saveText, location: saveLocation });
 }
 
