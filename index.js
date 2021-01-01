@@ -90,8 +90,7 @@ function convertToNumber(str) {
 
 //Save any text to downloads file
 const saveText = (saveText, saveLocation) => {
-  console.log("Saving file");
-  console.log(saveLocation);
+  console.log("saving hand");
   chrome.runtime.sendMessage({ method: "saveText", text: saveText, location: saveLocation });
 }
 
@@ -101,7 +100,6 @@ const saveText = (saveText, saveLocation) => {
 const createDealerObserver = () => {
   var mutationObserver = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
-          //console.log(mutation.target);
           if (typeof mutation.target.className != 'undefined') {
               if (mutation.target.className.includes("dealer-position-")) {
                   newHand();

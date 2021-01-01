@@ -45,7 +45,8 @@ class Hand {
 
 
         this.setVariables();
-        console.log(this.log);
+        //console.log(this.log);
+        console.log("Processing hand...");
         this.processLog();
         //sets hand headers
         this.output = "PokerStars Hand #" + this.handID + ": Hold'em No Limit ($" + this.smallBlind + "/$" + this.bigBlind + " USD) - " + this.time + " GMT" + '\n';
@@ -159,7 +160,6 @@ class Hand {
             this.output += "Seat " + player.seat + ": " + player.name + extraMessage + '\n';
         }
         
-        console.log(this.output);
         saveText(this.output,"pokernow_hands\\" + this.smallBlind + "-" + this.bigBlind + " " + this.tableID + "-" + this.handNumber + ".txt")
     }
     processLog() {
@@ -394,7 +394,7 @@ class Hand {
             player.id = id;
             player.stackSize = stackSize;
             player.index = i;
-            if (name.toLowerCase() == this.heroName.toLowerCase()) {
+            if (name == this.heroName) {
                 this.hero = player;
             }
             this.players.push(player);
