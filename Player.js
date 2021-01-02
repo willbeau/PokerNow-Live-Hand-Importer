@@ -12,6 +12,7 @@ class Player{
     this.didBet = false;
     this.index = -1;
     this.smallBlindAmount = 0.0;
+    this.bigBlindAmount = 0.0;
     this.betSize = 0.0; //how much money player has already put into the pot on this street
     this.won = false;
     this.winAmount = 0.0;

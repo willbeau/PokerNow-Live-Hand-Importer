@@ -62,14 +62,30 @@ class Hand {
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
             if (player.smallBlind) {
-                this.output += player.name + ": posts small blind $" + player.blindAmount + '\n';
+                if(!player.bigBlind){
+                    this.output += player.name + ": posts small blind $" + player.smallBlindAmount + '\n';
+                }
+                
             }
         }
         //Sets big blinds section of output
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
             if (player.bigBlind) {
-                this.output += player.name + ": posts big blind $" + player.blindAmount + '\n';
+                if(!player.smallBlind){
+                    this.output += player.name + ": posts big blind $" + player.bigBlindAmount + '\n';
+                }
+                
+            }
+        }
+
+        //sets missing blinds section of output
+        for (let i = 0; i < this.players.length; i++) {
+            let player = this.players[i]; //if player is bigblind and smallblind
+            if (player.smallBlind) {
+                if(player.bigBlind){
+                    this.output += player.name + ": posts big blind $" + round(player.smallBlindAmount + player.bigBlindAmount,2) + '\n';
+                }
             }
         }
 
@@ -196,10 +212,10 @@ class Hand {
                 //gets how much the player posted for the blind
                 startP = line.lastIndexOf("blind of") + 9;
                 endP = line.length;
-                player.blindAmount = parseFloat(line.substring(startP, endP));
+                player.smallBlindAmount = parseFloat(line.substring(startP, endP));
                 player.didBet = true;
                 player.smallBlind = true;
-                player.betSize = player.blindAmount;
+                player.betSize = player.smallBlindAmount;
 
                 this.blindCount++;
                 //Sets previous player to be the button (we check in case the player has less then 1 blind)
@@ -217,8 +233,8 @@ class Hand {
                 startP = line.lastIndexOf("blind of") + 9;
                 endP = line.length;
                 player.didBet = true;
-                player.blindAmount = parseFloat(line.substring(startP, endP));
-                player.betSize = player.blindAmount;
+                player.bigBlindAmount = parseFloat(line.substring(startP, endP));
+                player.betSize = player.bigBlindAmount;
                 player.bigBlind = true;
 
                 this.blindCount ++;
