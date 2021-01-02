@@ -10,7 +10,7 @@ function startHandImporter(){
   let blinds = document.getElementsByClassName('blind-value');
   if (blinds.length) {
     //game loaded, we can run program now
-    winObserver = createDealerObserver();
+    winObserver = createWinObserver();
 
     updateBlinds();
 
@@ -95,21 +95,15 @@ const saveText = (saveText, saveLocation) => {
 }
 
 
-
-//observes entire table to look for dealer button moving to call new hand
-const createDealerObserver = () => {
+//observes the entire table to look for chips being added to a players stack to process the hand
+//
+const createWinObserver = () => {
   var mutationObserver = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
-          if (typeof mutation.target.className != 'undefined') {
-              if (mutation.target.className.includes("dealer-position-")) {
-                  newHand();
-                  return;
-              }
-          }
           mutation.addedNodes.forEach(
               function (node) {
                   if (typeof node.className != 'undefined') {
-                      if (node.className.includes("dealer-position-")) {
+                      if (node.className.includes("table-player-stack-prize")) {
                           newHand();
                       }
                   }
@@ -127,6 +121,8 @@ const createDealerObserver = () => {
   });
   return mutationObserver;
 }
+
+
 function fixCards(str){
   return str.replaceAll("♠","s").replaceAll("♥","h").replaceAll("♦","d").replaceAll("♣","c").replaceAll("10","T");
 }
