@@ -9,6 +9,9 @@
     "scripts":
        ["hot-reload.js","background.js"] 
       },
+
+      "icons": {
+       "128": "icon.png" },
   "content_scripts": [
     {
         "matches": [
@@ -19,5 +22,6 @@
 
     }
   ]
+
   
 }
