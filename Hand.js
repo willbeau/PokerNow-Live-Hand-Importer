@@ -470,8 +470,9 @@ class Hand {
     setHandID() {
         let tableName = this.tableID.replace("-", "")
         this.setHandNumber();
-        let id = convertToNumber((tableName + this.handNumber).replace(/\s+/g, '')).join("");
+        let id = convertToNumber((tableName).replace(/\s+/g, '')).join("") + this.handNumber;
         id = id.substring(id.length - 15, id.length);
+        console.log(id);
         this.handID = id;
 
     }

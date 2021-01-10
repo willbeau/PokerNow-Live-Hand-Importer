@@ -18,7 +18,6 @@ function startHandImporter(){
 
     updateBlinds();
 
-
     //call log button clicked upon clicking log
     log_button = document.getElementsByClassName("button-1 show-log-button small-button dark-gray")[0];
     log_button.addEventListener("click", logButtonClicked, false);
@@ -108,7 +107,7 @@ function convertToNumber(str) {
       u: 21, v: 22, w: 23, x: 24, y: 25, z: 26,
       A: 27, B: 28, C: 29, D: 30, E: 31, F: 32, G: 33, H: 34, I: 35, J: 36, K: 37,
       L: 38, M: 39, N: 40, O: 41, P: 42, Q: 43, R: 44, S: 45, T: 46,
-      U: 47, V: 48, W: 49, X: 50, Y: 51, Z: 52, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9
+      U: 47, V: 48, W: 49, X: 50, Y: 51, Z: 52, '0' :'0', '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9
   }
   if (str.length == 1) return anum[str] || '';
 
