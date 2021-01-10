@@ -1,10 +1,14 @@
 var multiplier = 1;
 
 console.log('Poker Now Hand Grabber Running!');
+
 startHandImporter();
 
 var smallBlind;
+
 var bigBlind;
+
+var log_button;
 
 function startHandImporter(){
   let blinds = document.getElementsByClassName('blind-value');
@@ -16,7 +20,10 @@ function startHandImporter(){
 
     ProcessLastHand();
 
-    getHeroName();
+    //call log button clicked upon clicking log
+    log_button = document.getElementsByClassName("button-1 show-log-button small-button dark-gray")[0];
+    log_button.addEventListener("click", logButtonClicked, false);
+
   } else {
     setTimeout(startHandImporter, 350); // try again in 350 milliseconds
   }
@@ -29,17 +36,39 @@ const newHand = () => {
 
 //Fetches and converts last hand to pokerstars format
 const ProcessLastHand = async() => {
-  let log = await fetchLastLog();
-  let hand = new Hand();
-  hand.rawLog = log;
-  hand.smallBlind = smallBlind;
-  hand.bigBlind = bigBlind;
-  hand.multiplier = multiplier;
-  hand.tableID = getTableID();
-  hand.heroName =getHeroName();
-  hand.convertToPokerStarsFormat();
+  disableDownloadShelf();
+  setTimeout(async function(){
+    let log = await fetchLastLog();
+    let hand = new Hand();
+    hand.rawLog = log;
+    hand.smallBlind = smallBlind;
+    hand.bigBlind = bigBlind;
+    hand.multiplier = multiplier;
+    hand.tableID = getTableID();
+    hand.heroName =getHeroName();
+    hand.givenBlinds = true;
+    hand.convertToPokerStarsFormat();
+    setTimeout(enableDownloadShelf(), 1000);
+  },500);
 }
 
+const ProcessHand = (log) => {
+  if(log.length != 0){
+
+    let hand = new Hand();
+    hand.log = log;
+    hand.multiplier = multiplier;
+    hand.tableID = getTableID();
+    hand.heroName = getHeroName();
+    hand.convertToPokerStarsFormat();
+    if(firstHand == -1){
+      firstHand = hand.handNumber; 
+    }
+    count++;
+    console.log(count + " / " + firstHand);
+  }
+  
+}
 
 //Fetches previous hand from log url
 const fetchLastLog = async () => {
@@ -90,13 +119,20 @@ function convertToNumber(str) {
 
 //Save any text to downloads file
 const saveText = (saveText, saveLocation) => {
-  console.log("saving hand");
-  chrome.runtime.sendMessage({ method: "saveText", text: saveText, location: saveLocation });
+  chrome.runtime.sendMessage({method: "saveText", text: saveText, location: saveLocation });
+  disableDownloadShelf();
+}
+
+const disableDownloadShelf = () => {
+  chrome.runtime.sendMessage({method: "disableDownloadShelf"});
+}
+
+const enableDownloadShelf = () => {
+  chrome.runtime.sendMessage({method: "enableDownloadShelf"});
 }
 
 
 //observes the entire table to look for chips being added to a players stack to process the hand
-//
 const createWinObserver = () => {
   var mutationObserver = new MutationObserver(mutations => {
       mutations.forEach(mutation => {

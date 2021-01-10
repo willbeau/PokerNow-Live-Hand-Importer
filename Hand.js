@@ -38,15 +38,16 @@ class Hand {
 
         this.blindCount = 0; // # of players that have posted blinds
         this.acted = 0;
-
+        
+        this.givenBlinds = false; //if blinds are provided
     }
     //Converts hand to pokerstars format
     convertToPokerStarsFormat() {
-
-
         this.setVariables();
-        //console.log(this.log);
-        console.log("Processing hand...");
+        if (!this.rawLog.includes("ending hand") || !this.rawLog.includes("starting hand") || !this.rawLog.includes("(No Limit Texas Hold'em)")) {
+            return;
+        }
+        
         this.processLog();
         //sets hand headers
         this.output = "PokerStars Hand #" + this.handID + ": Hold'em No Limit ($" + this.smallBlind + "/$" + this.bigBlind + " USD) - " + this.time + " GMT" + '\n';
@@ -175,7 +176,7 @@ class Hand {
             }
             this.output += "Seat " + player.seat + ": " + player.name + extraMessage + '\n';
         }
-        
+        console.log("Saving hand " + this.handNumber);
         saveText(this.output,"pokernow_hands\\" + this.smallBlind + "-" + this.bigBlind + " " + this.tableID + "-" + this.handNumber + ".txt")
     }
     processLog() {
@@ -218,15 +219,10 @@ class Hand {
                 player.betSize = player.smallBlindAmount;
 
                 this.blindCount++;
-                //Sets previous player to be the button (we check in case the player has less then 1 blind)
-                /*let index = player.index;
-                index--;
-                if (index == -1) {
-                    index = this.players.length - 1;
+
+                if(!this.givenBlinds){
+                    this.smallBlind = player.smallBlindAmount;
                 }
-                this.players[index].button = true;
-                this.buttonSeat = this.players[index].seat;
-                */
             } else if (line.includes("big blind")) {
                 //big blind
                 //gets how much player posted for the blind (we check in case the player has less then 1 blind)
@@ -236,6 +232,11 @@ class Hand {
                 player.bigBlindAmount = parseFloat(line.substring(startP, endP));
                 player.betSize = player.bigBlindAmount;
                 player.bigBlind = true;
+
+                if(!this.givenBlinds){   
+                    this.bigBlind = player.bigBlindAmount;
+                }
+                this.betSize = this.bigBlind;
 
                 this.blindCount ++;
             } else if (line.includes("Your hand is ")) {
@@ -370,11 +371,16 @@ class Hand {
 
     //Sets all required variables needed to convert hand to pokerstars format
     setVariables() {
-        this.setLog();
+        if(this.rawLog == ""){
+            this.rawLog = JSON.stringify(this.log);
+            this.log.reverse();
+        }else{
+            this.setLog();
+        }
         this.setTime();
         this.setHandID();
         this.getPlayers();
-        this.betSize = this.bigBlind;
+        
     }
 
     //Create player objects
@@ -443,6 +449,7 @@ class Hand {
         }
         strOut = strOut.substring(0, strOut.length - 1);
         strOut = '[ ' + strOut + "]";
+
         this.log = JSON.parse(strOut);
         this.log.reverse();
     }

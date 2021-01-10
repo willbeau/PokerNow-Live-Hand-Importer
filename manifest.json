@@ -17,7 +17,7 @@
         "matches": [
             "https://*.pokernow.club/games/*"
         ],
-      "js": ["Player.js","index.js","Hand.js"],
+      "js": ["Player.js","index.js","Hand.js","GUI.JS"],
       "run_at": "document_start"
 
     }
