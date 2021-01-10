@@ -18,7 +18,6 @@ function startHandImporter(){
 
     updateBlinds();
 
-    ProcessLastHand();
 
     //call log button clicked upon clicking log
     log_button = document.getElementsByClassName("button-1 show-log-button small-button dark-gray")[0];
