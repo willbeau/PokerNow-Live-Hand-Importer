@@ -58,7 +58,7 @@ class Hand {
             let player = this.players[i];
             this.output += "Seat " + player.seat + ": " + player.name + " ($" + player.stackSize + " in chips)" + '\n';
         }
-
+        
         //Sets small blinds section of output
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
@@ -89,6 +89,14 @@ class Hand {
                 }
             }
         }
+        //sets straddle section of output
+        for (let i = 0; i < this.players.length; i++) {
+            let player = this.players[i]; 
+            if(player.straddle){
+                this.output += player.name + ": posts straddle $" + round(player.straddleAmount,2) + '\n';
+            }
+        }
+        
 
         //Sets heros hole cards
         this.output += "*** HOLE CARDS ***" + '\n';
@@ -239,7 +247,21 @@ class Hand {
                 this.betSize = this.bigBlind;
 
                 this.blindCount ++;
-            } else if (line.includes("Your hand is ")) {
+
+            }else if (line.includes("posts a straddle")){
+                    //straddle
+                    startP = line.lastIndexOf("straddle of") + 12;
+                    endP = line.length;
+                    player.didBet = true;
+                    player.straddleAmount = parseFloat(line.substring(startP, endP));
+                    console.log(player.straddleAmount);
+                    player.betSize = player.straddleAmount;
+                    player.straddle = true;
+                    this.betSize = player.straddleAmount;
+                    console.log("gere");
+                    this.blindCount ++;
+            }
+             else if (line.includes("Your hand is ")) {
                 startP = 13;
                 endP = line.length;
                 this.hero.hand = fixCards(line.substring(startP, endP)).replaceAll(",", "");

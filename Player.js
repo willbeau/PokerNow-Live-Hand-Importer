@@ -5,6 +5,8 @@ class Player{
     this.hand = "";
     this.smallBlind = false;
     this.bigBlind = false;
+    this.straddle = false;
+    this.straddleAmount = 0.0;
     this.button = false;
     this.stackSize = 0.0;
     this.multiplier = 1;
