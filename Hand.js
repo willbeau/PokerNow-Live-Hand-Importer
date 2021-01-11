@@ -269,7 +269,7 @@ class Hand {
 
                 //finds betsize and raise amount
                 this.acted++;
-
+                
                 startP = line.lastIndexOf(" raises to ") + 11;
                 endP = line.length;
                 let betSize = round(parseFloat(line.substring(startP, endP)),2);
@@ -279,8 +279,12 @@ class Hand {
                 this.betSize = betSize;
                 player.betSize = betSize;
                 player.didBet = true;
-
-                action = player.name + ": raises $" + raiseAmount + " to $" + this.betSize;
+                if(line.includes("go all in")){
+                    action = player.name + ": raises $" + raiseAmount + " to $" + this.betSize + " and is all-in"
+                }else{
+                    action = player.name + ": raises $" + raiseAmount + " to $" + this.betSize;
+                }
+                
 
             } else if (line.includes(" folds")) {
                 //folds
@@ -295,11 +299,13 @@ class Hand {
                     endP = line.lastIndexOf("and go all in") - 1;
                     let betSize = round(line.substring(startP, endP),2); //amount the player bet
                     this.betSize = betSize;
+                    player.betSize = betSize;
                     action = player.name + ": bets $" + betSize + " and is all-in";
                 }else{
                     endP = line.length;
                     let betSize = round(line.substring(startP, endP),2); //amount the player bet
                     this.betSize = betSize;
+                    player.betSize = betSize;
                     action = player.name + ": bets $" + betSize;
                 }
                 
