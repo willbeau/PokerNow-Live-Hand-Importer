@@ -185,7 +185,7 @@ class Hand {
             this.output += "Seat " + player.seat + ": " + player.name + extraMessage + '\n';
         }
         console.log("Saving hand " + this.handNumber);
-        saveText(this.output,"pokernow_hands\\" + this.smallBlind + "-" + this.bigBlind + " " + this.tableID + "-" + this.handNumber + ".txt")
+        saveText(this.output,"pokernow_hands/" + this.smallBlind + "-" + this.bigBlind + " " + this.tableID + "-" + this.handNumber + ".txt")
     }
     processLog() {
         //iterate through each line in the log
