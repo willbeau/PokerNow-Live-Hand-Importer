@@ -1,3 +1,5 @@
+const NEW_HAND_TIMEOUT = 10 * 1000; //10 seconds
+
 var multiplier = 1;
 
 console.log('Poker Now Hand Grabber Running!');
@@ -9,6 +11,7 @@ var smallBlind;
 var bigBlind;
 
 var log_button;
+
 
 function startHandImporter(){
   let blinds = document.getElementsByClassName('blind-value');
@@ -138,7 +141,7 @@ const createWinObserver = () => {
               function (node) {
                   if (typeof node.className != 'undefined') {
                       if (node.className.includes("table-player-stack-prize")) {
-                          newHand();
+                          setTimeout(newHand(), NEW_HAND_TIMEOUT);
                       }
                   }
               }

@@ -1,3 +1,4 @@
+const SITE_NAME = "PokerStars";
 
 //REQUIRES:  rawLog, smallBlind,bigBlind,multiplier,heroName,handID
 class Hand {
@@ -50,8 +51,8 @@ class Hand {
         
         this.processLog();
         //sets hand headers
-        this.output = "PokerStars Hand #" + this.handID + ": Hold'em No Limit ($" + this.smallBlind + "/$" + this.bigBlind + " USD) - " + this.time + " GMT" + '\n';
-        this.output += "Table 'PokerNowLiveImporter' 10-max Seat #" + this.buttonSeat + " is the button" + '\n';
+        this.output = SITE_NAME + " Hand #" + this.handID + ": Hold'em No Limit ($" + this.smallBlind + "/$" + this.bigBlind + " USD) - " + this.time + " GMT" + '\n';
+        this.output += "Table '" + this.tableID + "' 10-max Seat #" + this.buttonSeat + " is the button" + '\n';
 
         //sets stack size section of output
         for (let i = 0; i < this.players.length; i++) {
