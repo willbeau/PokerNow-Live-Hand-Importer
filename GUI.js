@@ -80,3 +80,7 @@ const processAllHands = () => {
     getLog();
     enableDownloadShelf();
 }
+
+function setTableName(name, blinds, game) {
+  document.title = `${name} - ${blinds} - ${game || ""}`;
+}

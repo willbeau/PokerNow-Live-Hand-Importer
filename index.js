@@ -3,17 +3,18 @@ const NEW_HAND_TIMEOUT = 10 * 1000; //10 seconds
 var multiplier = 1;
 
 console.log('Poker Now Hand Grabber Running!');
-
 startHandImporter();
 
 var smallBlind;
-
 var bigBlind;
+
+var gameType = "";
 
 var log_button;
 
 
 function startHandImporter(){
+  console.log("LOADED");
   let blinds = document.getElementsByClassName('blind-value');
   if (blinds.length) {
     //game loaded, we can run program now
@@ -24,7 +25,6 @@ function startHandImporter(){
     //call log button clicked upon clicking log
     log_button = document.getElementsByClassName("button-1 show-log-button small-button dark-gray")[0];
     log_button.addEventListener("click", logButtonClicked, false);
-
   } else {
     setTimeout(startHandImporter, 350); // try again in 350 milliseconds
   }
@@ -88,11 +88,15 @@ const fetchLastLog = async () => {
   return log;
 }
 
-//updates the blind values
+//updates the blind values and game type
 const updateBlinds = () => {
   let blinds = document.getElementsByClassName('blind-value')[0].innerText;
   bigBlind = parseFloat(blinds.substring(blinds.indexOf('/') + 2));
   smallBlind = parseFloat(blinds.substring(blinds.indexOf('~') + 2,blinds.indexOf('/')));
+
+  gameType = document.getElementsByClassName('table-game-type')[0].innerText || "";
+
+  setTableName(getTableID(), `${smallBlind}/${bigBlind}`, gameType);
 }
 
 //returns table id
