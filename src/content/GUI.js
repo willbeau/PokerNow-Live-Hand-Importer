@@ -3,6 +3,24 @@ var inHand = false;
 var firstHand = -1;
 var count = 0;
 
+function ProcessHand(log) {
+  if(log.length != 0){
+
+    let hand = new Hand();
+    hand.log = log;
+    hand.multiplier = multiplier;
+    hand.tableID = getTableID();
+    hand.heroName = getHeroName();
+    hand.convertToPokerStarsFormat();
+    if(_gui.firstHand == -1){
+      _gui.firstHand = hand.handNumber; 
+    }
+    count++;
+    console.log(count + " / " + firstHand);
+  }
+  
+}
+
 async function getLog(lastTime, minTime) {
     setTimeout(() => {
       if (minTime == undefined){
@@ -73,7 +91,7 @@ function logButtonClicked() {
     }, 10)
     //add the button the modal thing
 }
-const processAllHands = () => {
+function processAllHands() {
     disableDownloadShelf();
     firstHand = -1;
     count = 0;
@@ -83,4 +101,11 @@ const processAllHands = () => {
 
 function setTableName(name, blinds, game) {
   document.title = `${name} - ${blinds} - ${game || ""}`;
+}
+
+module.exports = {
+  getLog: getLog,
+  logButtonClicked: logButtonClicked,
+  processAllHands: processAllHands,
+  setTableName: setTableName
 }

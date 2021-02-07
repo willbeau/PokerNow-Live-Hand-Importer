@@ -1,7 +1,39 @@
+const Player = require('./Player.js');
+
+//Converts a string with letters and numbers into just numbers
+function convertToNumber(str) {
+    var anum = {
+        a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10, k: 11,
+        l: 12, m: 13, n: 14, o: 15, p: 16, q: 17, r: 18, s: 19, t: 20,
+        u: 21, v: 22, w: 23, x: 24, y: 25, z: 26,
+        A: 27, B: 28, C: 29, D: 30, E: 31, F: 32, G: 33, H: 34, I: 35, J: 36, K: 37,
+        L: 38, M: 39, N: 40, O: 41, P: 42, Q: 43, R: 44, S: 45, T: 46,
+        U: 47, V: 48, W: 49, X: 50, Y: 51, Z: 52, '0' :'0', '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9
+    }
+    if (str.length == 1) return anum[str] || '';
+  
+    return str.split('').map(convertToNumber);
+  }
+
+//Save any text to downloads file
+function saveText(saveText, saveLocation) {
+    chrome.runtime.sendMessage({method: "saveText", text: saveText, location: saveLocation });
+    disableDownloadShelf();
+  }
+
+function round(value, decimals) {
+    return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}   
+
+
+function fixCards(str){
+    return str.replaceAll("♠","s").replaceAll("♥","h").replaceAll("♦","d").replaceAll("♣","c").replaceAll("10","T");
+}
+
 const SITE_NAME = "PokerStars";
 
 //REQUIRES:  rawLog, smallBlind,bigBlind,multiplier,heroName,handID
-class Hand {
+module.exports = class Hand {
     constructor() {
         this.id = "";
         this.time;
@@ -45,6 +77,7 @@ class Hand {
     //Converts hand to pokerstars format
     convertToPokerStarsFormat() {
         this.setVariables();
+
         if (!this.rawLog.includes("ending hand") || !this.rawLog.includes("starting hand") || !this.rawLog.includes("(No Limit Texas Hold'em)")) {
             return;
         }
@@ -190,7 +223,6 @@ class Hand {
     }
     processLog() {
         //iterate through each line in the log
-
         for (let i = 0; i < this.log.length; i++) {
             let line = this.log[i].msg;
             let startP = -1;
@@ -409,7 +441,6 @@ class Hand {
         this.setTime();
         this.setHandID();
         this.getPlayers();
-        
     }
 
     //Create player objects
@@ -499,7 +530,9 @@ class Hand {
     setHandID() {
         let tableName = this.tableID.replace("-", "")
         this.setHandNumber();
+
         let id = convertToNumber((tableName).replace(/\s+/g, '')).join("") + this.handNumber;
+
         id = id.substring(id.length - 15, id.length);
         console.log(id);
         this.handID = id;

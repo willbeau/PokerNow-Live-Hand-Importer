@@ -1,8 +1,15 @@
+// require('@babel/polyfill');
+const _gui = require('./GUI.js');
+
+const logButtonClicked = _gui.logButtonClicked;
+const setTableName = _gui.setTableName;
+
+const Hand = require('./Hand.js');
+
 const NEW_HAND_TIMEOUT = 10 * 1000; //10 seconds
 
 var multiplier = 1;
 
-console.log('Poker Now Hand Grabber Running!');
 startHandImporter();
 
 var smallBlind;
@@ -14,7 +21,6 @@ var log_button;
 
 
 function startHandImporter(){
-  console.log("LOADED");
   let blinds = document.getElementsByClassName('blind-value');
   if (blinds.length) {
     //game loaded, we can run program now
@@ -25,18 +31,20 @@ function startHandImporter(){
     //call log button clicked upon clicking log
     log_button = document.getElementsByClassName("button-1 show-log-button small-button dark-gray")[0];
     log_button.addEventListener("click", logButtonClicked, false);
+
+    console.log('Poker Now Hand Grabber Running!');
   } else {
     setTimeout(startHandImporter, 350); // try again in 350 milliseconds
   }
 }
 
-const newHand = () => {
+function newHand() {
     ProcessLastHand();
     updateBlinds();
 }
 
 //Fetches and converts last hand to pokerstars format
-const ProcessLastHand = async() => {
+function ProcessLastHand() {
   disableDownloadShelf();
   setTimeout(async function(){
     let log = await fetchLastLog();
@@ -53,26 +61,8 @@ const ProcessLastHand = async() => {
   },500);
 }
 
-const ProcessHand = (log) => {
-  if(log.length != 0){
-
-    let hand = new Hand();
-    hand.log = log;
-    hand.multiplier = multiplier;
-    hand.tableID = getTableID();
-    hand.heroName = getHeroName();
-    hand.convertToPokerStarsFormat();
-    if(firstHand == -1){
-      firstHand = hand.handNumber; 
-    }
-    count++;
-    console.log(count + " / " + firstHand);
-  }
-  
-}
-
 //Fetches previous hand from log url
-const fetchLastLog = async () => {
+async function fetchLastLog() {
   const sessionUrl = window.location.href;
   const url = `${sessionUrl}/log?after_at=&before_at=`
   const data = await fetch(url).then(res => res.text())
@@ -89,7 +79,7 @@ const fetchLastLog = async () => {
 }
 
 //updates the blind values and game type
-const updateBlinds = () => {
+function updateBlinds() {
   let blinds = document.getElementsByClassName('blind-value')[0].innerText;
   bigBlind = parseFloat(blinds.substring(blinds.indexOf('/') + 2));
   smallBlind = parseFloat(blinds.substring(blinds.indexOf('~') + 2,blinds.indexOf('/')));
@@ -106,39 +96,17 @@ function getTableID() {
   return url.substring(startP, url.length);
 }
 
-//Converts a string with letters and numbers into just numbers
-function convertToNumber(str) {
-  var anum = {
-      a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10, k: 11,
-      l: 12, m: 13, n: 14, o: 15, p: 16, q: 17, r: 18, s: 19, t: 20,
-      u: 21, v: 22, w: 23, x: 24, y: 25, z: 26,
-      A: 27, B: 28, C: 29, D: 30, E: 31, F: 32, G: 33, H: 34, I: 35, J: 36, K: 37,
-      L: 38, M: 39, N: 40, O: 41, P: 42, Q: 43, R: 44, S: 45, T: 46,
-      U: 47, V: 48, W: 49, X: 50, Y: 51, Z: 52, '0' :'0', '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9
-  }
-  if (str.length == 1) return anum[str] || '';
-
-  return str.split('').map(convertToNumber);
-}
-
-
-//Save any text to downloads file
-const saveText = (saveText, saveLocation) => {
-  chrome.runtime.sendMessage({method: "saveText", text: saveText, location: saveLocation });
-  disableDownloadShelf();
-}
-
-const disableDownloadShelf = () => {
+function disableDownloadShelf() {
   chrome.runtime.sendMessage({method: "disableDownloadShelf"});
 }
 
-const enableDownloadShelf = () => {
+function enableDownloadShelf() {
   chrome.runtime.sendMessage({method: "enableDownloadShelf"});
 }
 
 
 //observes the entire table to look for chips being added to a players stack to process the hand
-const createWinObserver = () => {
+function createWinObserver() {
   var mutationObserver = new MutationObserver(mutations => {
       mutations.forEach(mutation => {
           mutation.addedNodes.forEach(
@@ -162,14 +130,7 @@ const createWinObserver = () => {
   });
   return mutationObserver;
 }
-
-
-function fixCards(str){
-  return str.replaceAll("♠","s").replaceAll("♥","h").replaceAll("♦","d").replaceAll("♣","c").replaceAll("10","T");
-}
-function round(value, decimals) {
-  return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
- }   
+   
  function getHeroName(){
    for(let i = 0; i <=10; i++){
      let seat = document.getElementsByClassName("table-player table-player-" + i +  " you-player ");

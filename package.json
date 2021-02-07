@@ -1,0 +1,28 @@
+{
+  "name": "pokernow-live-hand-importer",
+  "version": "0.1.0",
+  "description": "Convert and download PokerNow hands to PokerStars format live",
+  "scripts": {
+    "build": "browserify ./src/background/background.js | terser -c > ./extension/output/background.js & browserify ./src/content/index.js | terser -c > ./extension/output/content.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willbeau/PokerNow-Live-Hand-Importer.git"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/willbeau/PokerNow-Live-Hand-Importer/issues"
+  },
+  "homepage": "https://github.com/willbeau/PokerNow-Live-Hand-Importer#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/cli": "^7.12.13",
+    "@babel/core": "^7.12.13",
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.12.13",
+    "browserify": "^17.0.0",
+    "terser": "^5.5.1",
+    "uglify-js": "^3.12.6"
+  }
+}

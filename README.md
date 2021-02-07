@@ -1,2 +1,2 @@
 # PokerNow Live Hand Importer
- Convert and download pokernow hands to pokerstars format live
+ Convert and download PokerNow hands to PokerStars format live

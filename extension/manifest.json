@@ -1,25 +1,23 @@
 {
   "manifest_version": 2,
   "name": "Poker Now Live Hand Importer",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "permissions": [
     "downloads","downloads.shelf"
   ],
   "background": { 
-    "scripts":
-       ["hot-reload.js","background.js"] 
-      },
-
-      "icons": {
-       "128": "icon.png" },
+    "scripts": ["hot-reload.js","output/background.js"] 
+  },
+  "icons": {
+    "128": "icon.png" 
+  },
   "content_scripts": [
     {
         "matches": [
             "https://*.pokernow.club/games/*"
         ],
-      "js": ["Player.js","index.js","Hand.js","GUI.js"],
+      "js": ["output/content.js"],
       "run_at": "document_start"
-
     }
   ]
 

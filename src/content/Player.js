@@ -1,4 +1,4 @@
-class Player{
+module.exports = class Player{
   constructor(){
     this.id;
     this.seat = -1;
