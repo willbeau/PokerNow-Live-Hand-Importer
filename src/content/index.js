@@ -1,4 +1,5 @@
-// require('@babel/polyfill');
+var browser = require("webextension-polyfill");
+
 const _gui = require('./GUI.js');
 
 const logButtonClicked = _gui.logButtonClicked;
@@ -10,7 +11,12 @@ const NEW_HAND_TIMEOUT = 10 * 1000; //10 seconds
 
 var multiplier = 1;
 
-startHandImporter();
+browser.runtime.sendMessage({method: "makePopup"}).then(
+  _ => startHandImporter(),
+  error => { console.error(error); }
+);
+
+//startHandImporter();
 
 var smallBlind;
 var bigBlind;
@@ -18,6 +24,8 @@ var bigBlind;
 var gameType = "";
 
 var log_button;
+
+let winObserver;
 
 
 function startHandImporter(){
@@ -97,11 +105,11 @@ function getTableID() {
 }
 
 function disableDownloadShelf() {
-  chrome.runtime.sendMessage({method: "disableDownloadShelf"});
+  browser.runtime.sendMessage({method: "disableDownloadShelf"});
 }
 
 function enableDownloadShelf() {
-  chrome.runtime.sendMessage({method: "enableDownloadShelf"});
+  browser.runtime.sendMessage({method: "enableDownloadShelf"});
 }
 
 
@@ -140,3 +148,181 @@ function createWinObserver() {
    }
    return "";
  }
+
+//
+//  BET MODIFIERS AND RNG
+//
+
+let rngEnabled = false;
+let customBets = false;
+
+let conf;
+
+try {
+  browser.storage.local.get({
+      enableRNG: false,
+      enableCustomBets: false,
+      preflopBB: "2.5,3",
+      preflopPCT: "0.5,1",
+      flopBB: "",
+      flopPCT: "0.5,1",
+      turnBB: "",
+      turnPCT: "0.5,1",
+      riverBB: "",
+      riverPCT: "0.5,1"
+  }).then(res => {
+    rngEnabled = res.enableRNG || false;
+    customBets = res.enableCustomBets || false;
+    
+    conf = {
+      preflop: {
+        bb:String(res.preflopBB).split(",").filter(e => e!="").map(e => Number(e)),
+        pct:String(res.preflopPCT).split(",").filter(e => e!="").map(e => Number(e))
+      },
+      flop: {
+        bb:String(res.flopBB).split(",").filter(e => e!="").map(e => Number(e)),
+        pct:String(res.flopPCT).split(",").filter(e => e!="").map(e => Number(e))
+      },
+      turn: {
+        bb:String(res.turnBB).split(",").filter(e => e!="").map(e => Number(e)),
+        pct:String(res.turnPCT).split(",").filter(e => e!="").map(e => Number(e))
+      },
+      river: {
+        bb:String(res.riverBB).split(",").filter(e => e!="").map(e => Number(e)),
+        pct:String(res.riverPCT).split(",").filter(e => e!="").map(e => Number(e))
+      }
+    }
+
+    //if both are disabled, dont waste resources
+    if (customBets || rngEnabled) {
+      function inputBet(bet){
+        let input = document.querySelector(".value-input-ctn > .value");
+        Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          "value"
+        ).set.call(input, bet);
+
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      function clearBetButtons(){
+      var dbb = document.querySelector(".default-bet-buttons");
+      while(dbb.firstChild) { dbb.firstChild.remove(); }
+      }
+
+      function addBetButtonBB(size){
+      var usingCents = document.querySelector(".slider-control").step != 1;
+      var dbb = document.querySelector(".default-bet-buttons");
+      var bbsize = document.querySelectorAll(".blind-value > .chips-value")[1].querySelector(".normal-value").innerText;
+
+      var chipSize = size*bbsize;
+
+      if (!usingCents) {
+        chipSize = Math.round(chipSize);
+      }
+
+      var a = document.createElement("button");
+      a.className = "button-1 default-bet-button";
+      a.type = "button";
+      a.innerText = size + "bb";
+      a.onclick=function(){inputBet(chipSize);}
+      dbb.appendChild(a);
+      }
+
+      function addBetButtonPct(size){
+        //Expects size to be a decimal from 0 to 1
+
+        var usingCents = document.querySelector(".slider-control").step != "1";
+        var dbb = document.querySelector(".default-bet-buttons");
+
+        let largestBet = 0;
+        var pot = document.querySelector(".table-pot-size > .main-value > .chips-value > .normal-value");
+        let potSize = pot ? Number(pot.innerHTML) : 0;
+        document.querySelectorAll(".table-player-bet-value > .chips-value > .normal-value").forEach(v => {
+          potSize += Number(v.innerHTML);
+          if (v.innerHTML > largestBet) {
+            largestBet = Number(v.innerHTML);
+          }
+        });
+
+        var yb = document.querySelector(".you-player > .table-player-bet-value > .chips-value > .normal-value");
+        let yourBet = yb ? Number(yb.innerHTML) : 0;
+
+        var chipSize = largestBet + (largestBet-yourBet+potSize)*size;
+
+        if (!usingCents) {
+          chipSize = Math.round(chipSize);
+        }
+
+        var a = document.createElement("button");
+        a.className = "button-1 default-bet-button";
+        a.type = "button";
+        a.innerText = size*100 + "%";
+        a.onclick=function(){inputBet(chipSize);}
+        dbb.appendChild(a);
+      }
+
+      function updateBets(node) {
+      clearBetButtons();
+
+      let street = document.querySelector(".table-cards").children.length;
+
+      //Preflop
+      if (street == 0) {
+        (conf.preflop.bb || []).forEach(b => addBetButtonBB(b));
+        (conf.preflop.pct || []).forEach(b => addBetButtonPct(b));
+      }
+
+      //Flop
+      if (street == 3) {
+        (conf.flop.bb || []).forEach(b => addBetButtonBB(b));
+        (conf.flop.pct || []).forEach(b => addBetButtonPct(b));
+      }
+
+      //Turn
+      if (street == 4) {
+        (conf.turn.bb || []).forEach(b => addBetButtonBB(b));
+        (conf.turn.pct || []).forEach(b => addBetButtonPct(b));
+      }
+
+      //River
+      if (street == 5) {
+        (conf.river.bb || []).forEach(b => addBetButtonBB(b));
+        (conf.river.pct || []).forEach(b => addBetButtonPct(b));
+      }
+      }
+
+      function rollRNG(){
+      let roll_n = Math.round(Math.random()*100);
+      let gameinf = document.querySelector(".game-infos");
+
+      let a;
+      if ((a = gameinf.querySelector(".r-n-g"))) {
+        a.innerHTML = roll_n;
+      } else {
+        a = document.createElement("p");
+        a.className = "r-n-g";
+        a.innerHTML = roll_n;
+        a.style.color = "red";
+        gameinf.appendChild(a);
+      }
+      }
+
+      let raiseObs = new MutationObserver(function(muts){
+        muts.forEach(m => {
+          m.addedNodes.forEach(n => {
+            if (!n.classList) { return; }
+            if (customBets && n.classList.contains("raise-controller-form")){ updateBets(n); }
+            if (rngEnabled && n.classList.contains("action-signal")){ rollRNG(); }
+          });
+        });
+      });
+      raiseObs.observe(document.querySelector(".main-container"), {childList:true, subtree:true});
+    }
+  }, err => {
+      alert(err);
+  });
+}
+catch(e) {
+  alert(e)
+}

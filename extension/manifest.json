@@ -3,7 +3,7 @@
   "name": "Poker Now Live Hand Importer",
   "version": "0.1.0",
   "permissions": [
-    "downloads","downloads.shelf"
+    "storage", "downloads","downloads.shelf"
   ],
   "background": { 
     "scripts": ["hot-reload.js","output/background.js"] 
@@ -19,7 +19,8 @@
       "js": ["output/content.js"],
       "run_at": "document_start"
     }
-  ]
-
-  
+  ],
+  "options_ui": {
+    "page": "options.html"
+  }  
 }

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <script type="application/javascript" src="browser-polyfill.min.js"></script>
+    </head>
+    <body>
+        <h1>Settings will take effect after tables are refreshed</h1>
+        <form>
+            <label>Enable RNG Display</label>
+            <input type="checkbox" id="enableRNG"/><br/>
+            
+            <label>Enable Custom Bet Options</label>
+            <input type="checkbox" id="enableCustomBets"/><br/>
+            
+            <br/>
+
+            <label>Preflop BB Sizes (e.g. "2.5,3,6")</label>
+            <input type="text" id="preflopBB"/><br/>
+            <label>Preflop % Sizes (e.g. "50,100,150")</label>
+            <input type="text" id="preflopPCT"/><br/>
+
+            <br/>
+
+            <label>Flop BB Sizes (e.g. "2.5,3,6")</label>
+            <input type="text" id="flopBB"/><br/>
+            <label>Flop % Sizes (e.g. "50,100,150")</label>
+            <input type="text" id="flopPCT"/><br/>
+
+            <br/>
+
+            <label>Turn BB Sizes (e.g. "2.5,3,6")</label>
+            <input type="text" id="turnBB"/><br/>
+            <label>Turn % Sizes (e.g. "50,100,150")</label>
+            <input type="text" id="turnPCT"/><br/>
+
+            <br/>
+
+            <label>River BB Sizes (e.g. "2.5,3,6")</label>
+            <input type="text" id="riverBB"/><br/>
+            <label>River % Sizes (e.g. "50,100,150")</label>
+            <input type="text" id="riverPCT"/><br/>
+
+            <br/>
+
+            <button id="save-changes">Save Changes</button>
+        </form>
+        <script src="options.js"></script>
+    </body>
+</html>

@@ -1,3 +1,5 @@
+var browser = require("webextension-polyfill");
+
 const Player = require('./Player.js');
 
 //Converts a string with letters and numbers into just numbers
@@ -17,7 +19,7 @@ function convertToNumber(str) {
 
 //Save any text to downloads file
 function saveText(saveText, saveLocation) {
-    chrome.runtime.sendMessage({method: "saveText", text: saveText, location: saveLocation });
+    browser.runtime.sendMessage({method: "saveText", text: saveText, location: saveLocation });
     disableDownloadShelf();
   }
 
