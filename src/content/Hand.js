@@ -120,7 +120,7 @@ class Hand {
         }
         this.processLog();
         //sets hand headers
-        this.output = SITE_NAME + " Hand #" + this.handID + ": " + this.gameType + "($" + this.smallBlind + "/$" + this.bigBlind + " USD) - " + this.time + " GMT" + '\n';
+        this.output = SITE_NAME + " Hand #" + this.handID + ": " + this.gameType + " ($" + this.smallBlind + "/$" + this.bigBlind + " USD) - " + this.time + " GMT" + '\n';
         this.output += "Table '" + this.tableID + "' 10-max Seat #" + this.buttonSeat + " is the button" + '\n';
 
         //sets stack size section of output

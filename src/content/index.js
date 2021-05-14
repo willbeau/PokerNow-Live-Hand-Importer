@@ -63,6 +63,7 @@ function ProcessLastHand() {
     hand.tableID = getTableID();
     hand.heroName =getHeroName();
     hand.givenBlinds = true;
+    hand.gameType = gameType;
     hand.convertToPokerStarsFormat();
     setTimeout(enableDownloadShelf(), 1000);
   },500);
