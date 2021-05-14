@@ -580,20 +580,21 @@ class Hand {
 
     //sets log variable by cleaning up the raw log variable and parsing it as json
     setLog() {
-        let splitStr = this.rawLog.split('{"msg":');
+        let splitStr = this.rawLog.split('"msg":');
         let strOut = '';
         for (let i = 1; i < splitStr.length; i++) {
             let line = splitStr[i];
-            let endP = line.indexOf(',"game_id":');
+            let endP = line.indexOf('},{');
             let newLine = line;
-            if (endP != 0) {
+            if (endP >-1) {
                 newLine = line.substring(0, endP) + '},';
+            }else{
+                newLine = line.substring(0, line.length) + '},';
             }
             strOut = strOut + '{"msg":' + newLine;
         }
         strOut = strOut.substring(0, strOut.length - 1);
         strOut = '[ ' + strOut + "]";
-
         this.log = JSON.parse(strOut);
         this.log.reverse();
         console.log(this.log);
@@ -601,7 +602,7 @@ class Hand {
     //gets time of hand
     setTime() {
         let startP = this.rawLog.indexOf("-- starting hand #") + 18;
-        startP = this.rawLog.indexOf('"at":"', startP) + 6;
+        startP = this.rawLog.indexOf('"at":"', startP) + 8;
         let endP = this.rawLog.indexOf('.', startP);
         this.time = this.rawLog.substring(startP, endP).replaceAll("-", "/").replaceAll("T", " ");
     }
@@ -618,7 +619,6 @@ class Hand {
         let id = convertToNumber((tableName).replace(/\s+/g, '')).join("") + this.handNumber;
         id = id.substring(id.length - 15, id.length);
         this.handID = id;
-
     }
 }
 
