@@ -32,10 +32,18 @@ function fixCards(str){
     return str.replaceAll("♠","s").replaceAll("♥","h").replaceAll("♦","d").replaceAll("♣","c").replaceAll("10","T");
 }
 
+function disableDownloadShelf() {
+    browser.runtime.sendMessage({method: "disableDownloadShelf"});
+  }
+
+function enableDownloadShelf() {
+browser.runtime.sendMessage({method: "enableDownloadShelf"});
+}
+
 const SITE_NAME = "PokerStars";
 
 //REQUIRES:  rawLog, smallBlind,bigBlind,multiplier,heroName,handID
-module.exports = class Hand {
+class Hand {
     constructor() {
         this.id = "";
         this.time;
@@ -55,6 +63,11 @@ module.exports = class Hand {
         this.turn = "";
         this.river = "";
 
+        //RIT variables
+        this.secondFlop = "";
+        this.secondTurn = "";
+        this.secondRiver = "";
+
         this.hero;
 
 
@@ -69,24 +82,45 @@ module.exports = class Hand {
         this.turnActions = "";
         this.riverActions = "";
         this.showdownActions = "";
+
+        this.secondRiverActions = "";
+
         this.hasEnded = false;
 
         this.blindCount = 0; // # of players that have posted blinds
         this.acted = 0;
         
         this.givenBlinds = false; //if blinds are provided
+
+        this.gameType = "";
+
+        this.runTwice = false;
+        this.allInStreet = 0;
     }
     //Converts hand to pokerstars format
     convertToPokerStarsFormat() {
+        if(typeof this.rawLog == 'undefined'){
+            return;
+        }
         this.setVariables();
-
-        if (!this.rawLog.includes("ending hand") || !this.rawLog.includes("starting hand") || !this.rawLog.includes("(No Limit Texas Hold'em)")) {
+        if (!this.rawLog.includes("ending hand") || !this.rawLog.includes("starting hand")) {
             return;
         }
         
+        //sets variables required for running it twice
+        if(this.rawLog.includes("River (second run):")){
+            this.runTwice = true;
+            this.allInStreet = 2;
+            if(this.rawLog.includes("Turn (second run):")){
+                this.allInStreet = 1;
+                if(this.rawLog.includes("Flop (second run):")){
+                    this.allInStreet = 0;
+                }
+            }
+        }
         this.processLog();
         //sets hand headers
-        this.output = SITE_NAME + " Hand #" + this.handID + ": Hold'em No Limit ($" + this.smallBlind + "/$" + this.bigBlind + " USD) - " + this.time + " GMT" + '\n';
+        this.output = SITE_NAME + " Hand #" + this.handID + ": " + this.gameType + "($" + this.smallBlind + "/$" + this.bigBlind + " USD) - " + this.time + " GMT" + '\n';
         this.output += "Table '" + this.tableID + "' 10-max Seat #" + this.buttonSeat + " is the button" + '\n';
 
         //sets stack size section of output
@@ -94,15 +128,26 @@ module.exports = class Hand {
             let player = this.players[i];
             this.output += "Seat " + player.seat + ": " + player.name + " ($" + player.stackSize + " in chips)" + '\n';
         }
-        
+
+        //set ante section of output
+        for (let i = 0; i < this.players.length; i++) {
+            let player = this.players[i];
+            if (player.ante){
+                if(player.allinFromAnte){
+                    this.output += player.name + ": posts the ante $" + player.anteAmount + " and is all-in"+  '\n';
+                }else{
+                    this.output += player.name + ": posts the ante $" + player.anteAmount + '\n';
+                }
+                
+            }
+        }
+
+
         //Sets small blinds section of output
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
-            if (player.smallBlind) {
-                if(!player.bigBlind){
-                    this.output += player.name + ": posts small blind $" + player.smallBlindAmount + '\n';
-                }
-                
+            if (player.smallBlind && !player.bigblind && !player.missingSmallBlind) {
+                this.output += player.name + ": posts small blind $" + player.smallBlindAmount + '\n';
             }
         }
         //Sets big blinds section of output
@@ -124,6 +169,9 @@ module.exports = class Hand {
                     this.output += player.name + ": posts big blind $" + round(player.smallBlindAmount + player.bigBlindAmount,2) + '\n';
                 }
             }
+            if(player.missingSmallBlind){
+                this.output += player.name + ": posts missing small blind $" + round(player.smallBlindAmount,2) + '\n';
+            }
         }
         //sets straddle section of output
         for (let i = 0; i < this.players.length; i++) {
@@ -133,7 +181,6 @@ module.exports = class Hand {
             }
         }
         
-
         //Sets heros hole cards
         this.output += "*** HOLE CARDS ***" + '\n';
         if (typeof this.hero != 'undefined') {
@@ -141,25 +188,48 @@ module.exports = class Hand {
         }
 
         //Sets actions of the hand
+        let str = " "; //adjustment string for flop, turn, and river
+        if(this.runTwice){
+            str = " FIRST ";
+        }
+        
         for (let i = 0; i <= this.street; i++) {
             switch (i) {
                 case 0:
                     this.output += this.preflopActions
                     break;
                 case 1:
-                    this.output += "*** FLOP *** [" + this.flop + "]" + '\n';
+                    this.output += "***"  + str + "FLOP *** [" + this.flop + "]" + '\n';
                     this.output += this.flopActions;
                     break;
                 case 2:
-                    this.output += "*** TURN *** [" + this.flop + "] [" + this.turn + "]" + '\n';
+                    this.output += "***"  + str + "TURN *** [" + this.flop + "] [" + this.turn + "]" + '\n';
                     this.output += this.turnActions;
                     break;
                 case 3:
-                    this.output += "*** RIVER *** [" + this.flop + " " + this.turn + "] [" + this.river + "]" + '\n';
+                    this.output += "***"  + str + "RIVER *** [" + this.flop + " " + this.turn + "] [" + this.river + "]" + '\n';
                     this.output += this.riverActions;
+
+                    if(this.runTwice){
+                        str = " SECOND ";
+
+                        if(this.allInStreet == 0){
+                            this.output += "***"  + str + "FLOP *** [" + this.secondFlop + "]" + '\n';
+                            this.output += "***"  + str + "TURN *** [" + this.secondFlop + "] [" + this.secondTurn + "]" + '\n';
+                            this.output += "***"  + str + "RIVER *** [" + this.secondFlop + " " + this.secondTurn + "] [" + this.secondRiver + "]" + '\n';
+                        }
+                        if(this.allInStreet == 1){
+                            this.output += "***"  + str + "TURN *** [" + this.flop + "] [" + this.secondTurn + "]" + '\n';
+                            this.output += "***"  + str + "RIVER *** [" + this.flop + " " + this.secondTurn + "] [" + this.secondRiver + "]" + '\n';
+                        }
+                        if(this.allInStreet == 2){
+                            this.output += "***"  + str + "RIVER *** [" + this.flop + " " + this.turn + "] [" + this.secondRiver + "]" + '\n';
+                        }
+                    }
+
                     break;
                 case 4:
-                    this.output += "*** SHOWDOWN ***" + '\n';
+                    this.output += "***"  + str + "SHOWDOWN ***" + '\n';
                     this.output += this.showdownActions;
             }
         }
@@ -171,11 +241,11 @@ module.exports = class Hand {
                 this.output +=  player.name + ": shows [" + player.hand + "]" + '\n';
             }
         }
-        
+
         //Sets summary of hand
         
         this.output += "*** SUMMARY ***" + '\n';
-        this.output += "Total pot: " + "$" + this.potSize + " | Rake 0" + '\n';
+        this.output += "Total pot: " + "$" + round(this.potSize,2) + " | Rake 0" + '\n';
 
         //go through each player and write summary
         for (let i = 0; i < this.players.length; i++) {
@@ -207,7 +277,7 @@ module.exports = class Hand {
                     }
                     if(player.won){
                         //player won at showdown
-                        extraMessage += " and won ($" + player.winAmount + ")"
+                        extraMessage += " and won ($" + round(player.winAmount,2) + ")"
                     }else{
                         //player lost at showdown
                         extraMessage += " and lost";
@@ -220,8 +290,8 @@ module.exports = class Hand {
             }
             this.output += "Seat " + player.seat + ": " + player.name + extraMessage + '\n';
         }
-        console.log("Saving hand " + this.handNumber);
-        saveText(this.output,"pokernow_hands/" + this.smallBlind + "-" + this.bigBlind + " " + this.tableID + "-" + this.handNumber + ".txt")
+
+        saveText(this.output,"pokernow_hands/" + this.smallBlind + "-" + this.bigBlind + " " + this.tableID + "-" + this.handNumber + ".txt");
     }
     processLog() {
         //iterate through each line in the log
@@ -237,7 +307,18 @@ module.exports = class Hand {
                 this.flop = fixCards(line.substring(startP, endP).replaceAll(",", ""));
                 this.street = 1; //set current street to flop
                 this.newStreet();
-            } else if (line.includes("Turn: ")) {
+            }else if(line.includes("-- starting hand")){
+                endP = line.lastIndexOf('"');
+                startP = line.lastIndexOf("@", endP) + 2;
+                let id = line.substring(startP, endP);
+                for (let i = 0; i < this.players.length; i++) {
+                    let player = this.players[i];
+                    if(player.id == id){
+                        player.button = true;
+                        this.buttonSeat = player.seat;
+                    }
+                }
+            }else if (line.includes("Turn: ")) {
                 //turn
                 startP = line.indexOf("[") + 1;
                 endP = line.indexOf("]");
@@ -251,6 +332,24 @@ module.exports = class Hand {
                 this.river = fixCards(line.substring(startP, endP));
                 this.street = 3; //set current street to river
                 this.newStreet();
+            }else if(line.includes("Flop (second run):")){
+
+                startP = line.indexOf("[") + 1;
+                endP = line.indexOf("]");
+                this.secondFlop = fixCards(line.substring(startP, endP).replaceAll(",", ""));
+
+            }else if(line.includes("Turn (second run):")){
+
+                startP = line.indexOf("[") + 1;
+                endP = line.indexOf("]");
+                this.secondTurn = fixCards(line.substring(startP, endP).replaceAll(",", ""));
+
+            }else if(line.includes("River (second run):")){
+
+                startP = line.indexOf("[") + 1;
+                endP = line.indexOf("]");
+                this.secondRiver = fixCards(line.substring(startP, endP).replaceAll(",", ""));
+
             } else if (line.includes("small blind")) {
                 //small blind
                 //gets how much the player posted for the blind
@@ -258,6 +357,9 @@ module.exports = class Hand {
                 endP = line.length;
                 player.smallBlindAmount = parseFloat(line.substring(startP, endP));
                 player.didBet = true;
+                if(line.includes("missing blind of")){
+                    this.missingSmallBlind = true;
+                }
                 player.smallBlind = true;
                 player.betSize = player.smallBlindAmount;
 
@@ -265,6 +367,15 @@ module.exports = class Hand {
 
                 if(!this.givenBlinds){
                     this.smallBlind = player.smallBlindAmount;
+                }
+            } else if (line.includes("posts an ante of")){
+                startP = line.lastIndexOf("ante of") + 8;
+                endP = line.length;
+                player.anteAmount = parseFloat(line.substring(startP, endP));
+                player.ante = true;
+
+                if(line.includes("and go all in")){
+                    player.allinFromAnte = true;
                 }
             } else if (line.includes("big blind")) {
                 //big blind
@@ -289,11 +400,9 @@ module.exports = class Hand {
                     endP = line.length;
                     player.didBet = true;
                     player.straddleAmount = parseFloat(line.substring(startP, endP));
-                    console.log(player.straddleAmount);
                     player.betSize = player.straddleAmount;
                     player.straddle = true;
                     this.betSize = player.straddleAmount;
-                    console.log("gere");
                     this.blindCount ++;
             }
              else if (line.includes("Your hand is ")) {
@@ -385,12 +494,24 @@ module.exports = class Hand {
                 this.hasEnded = true;
                 player.won = true;
                 player.winAmount += collectAmount;
+            }else if(line.includes("Uncalled bet of ")){
+                if(!player.uncalled){
+                    startP = 15
+                    endP = line.indexOf(" returned to");
+                    let amount = round(line.substring(startP, endP),2);
+                    player.uncalled = true;
+                    action = "Uncalled bet ($" + amount + ") returned to " + player.name;
+                }   
             }
 
+            //set button
+
             //player is the last to act preflop - thus the button
-            if(this.street == 0 && this.acted == (this.players.length - this.blindCount) && typeof player != 'undefined'){
-                this.buttonSeat = player.seat;
-                player.button = true;
+            if(this.buttonSeat == -1){
+                if(this.street == 0 && this.acted == (this.players.length - this.blindCount) && typeof player != 'undefined'){
+                    this.buttonSeat = player.seat;
+                    player.button = true;
+                }
             }
             if (action != '') {
                 switch (this.street) {
@@ -469,7 +590,6 @@ module.exports = class Hand {
             endP = data.lastIndexOf('"');
             startP = data.lastIndexOf("@", endP) + 2;
             let id = data.substring(startP, endP);
-
             //Create player objects
             let player = new Player;
             player.name = name;
@@ -498,27 +618,28 @@ module.exports = class Hand {
 
     //sets log variable by cleaning up the raw log variable and parsing it as json
     setLog() {
-        let splitStr = this.rawLog.split('{"msg":');
+        let splitStr = this.rawLog.split('"msg":');
         let strOut = '';
         for (let i = 1; i < splitStr.length; i++) {
             let line = splitStr[i];
-            let endP = line.indexOf(',"game_id":');
+            let endP = line.indexOf('},{');
             let newLine = line;
-            if (endP != 0) {
+            if (endP >-1) {
                 newLine = line.substring(0, endP) + '},';
+            }else{
+                newLine = line.substring(0, line.length) + '},';
             }
             strOut = strOut + '{"msg":' + newLine;
         }
         strOut = strOut.substring(0, strOut.length - 1);
         strOut = '[ ' + strOut + "]";
-
         this.log = JSON.parse(strOut);
         this.log.reverse();
     }
     //gets time of hand
     setTime() {
         let startP = this.rawLog.indexOf("-- starting hand #") + 18;
-        startP = this.rawLog.indexOf('"at":"', startP) + 6;
+        startP = this.rawLog.indexOf('"at":"', startP) + 8;
         let endP = this.rawLog.indexOf('.', startP);
         this.time = this.rawLog.substring(startP, endP).replaceAll("-", "/").replaceAll("T", " ");
     }
@@ -536,14 +657,12 @@ module.exports = class Hand {
         let id = convertToNumber((tableName).replace(/\s+/g, '')).join("") + this.handNumber;
 
         id = id.substring(id.length - 15, id.length);
-        console.log(id);
         this.handID = id;
-
     }
 }
 
-
-
-
-
-
+module.exports = {
+    Hand: Hand,
+    disableDownloadShelf: disableDownloadShelf,
+    enableDownloadShelf: enableDownloadShelf
+};

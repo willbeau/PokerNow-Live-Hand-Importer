@@ -2,14 +2,27 @@ var browser = require("webextension-polyfill");
 
 browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.method == "saveText") {
-        console.log("saving text" + request.text);
-        save_content_to_file(request.text,request.location);
+        save_content_to_file(request.text,request.location, sendResponse);
     }
     if(request.method == "disableDownloadShelf"){
-        disableDownloadShelf();
+        if (browser.downloads.setShelfEnabled) {
+            setTimeout(()=> {
+                browser.downloads.setShelfEnabled(false);
+                sendResponse(true);
+            }, 100);
+        } else {
+            sendResponse(false);
+        }
     }
     if(request.method == "enableDownloadShelf"){
-        enableDownloadShelf();
+        if (browser.downloads.setShelfEnabled) {
+            setTimeout(()=> {
+                browser.downloads.setShelfEnabled(false);
+                sendResponse(true);
+            }, 100);
+        } else {
+            sendResponse(false);
+        }
     }
     if(request.method == "makePopup"){
         browser.windows.create({
@@ -25,7 +38,7 @@ browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     return true;
 });
 
-function save_content_to_file(content, saveLocation) {
+function save_content_to_file(content, saveLocation, sendResponse) {
     var blob = new Blob([content], {type: "text/plain"});
     var url = URL.createObjectURL(blob);
     browser.downloads.download({
@@ -43,14 +56,4 @@ function save_content_to_file(content, saveLocation) {
     }, err => {
         sendResponse(false);
     });
-}
-function disableDownloadShelf(){
-    setTimeout(() => {
-        browser.downloads.setShelfEnabled(false);
-    }, 100);
-}
-function enableDownloadShelf(){
-    setTimeout(() => {
-        browser.downloads.setShelfEnabled(true);
-    }, 100);
 }

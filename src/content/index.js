@@ -1,11 +1,15 @@
 var browser = require("webextension-polyfill");
 
-const _gui = require('./GUI.js');
+var log = [];
+var inHand = false;
+var firstHand = -1;
+var count = 0;
 
-const logButtonClicked = _gui.logButtonClicked;
-const setTableName = _gui.setTableName;
+function setTableName(name, blinds, game) {
+  document.title = `${name} - ${blinds} - ${game || ""}`;
+}
 
-const Hand = require('./Hand.js');
+const { Hand, disableDownloadShelf, enableDownloadShelf } = require('./Hand.js');
 
 const NEW_HAND_TIMEOUT = 10 * 1000; //10 seconds
 
@@ -15,8 +19,6 @@ browser.runtime.sendMessage({method: "makePopup"}).then(
   _ => startHandImporter(),
   error => { console.error(error); }
 );
-
-//startHandImporter();
 
 var smallBlind;
 var bigBlind;
@@ -36,9 +38,6 @@ function startHandImporter(){
 
     updateBlinds();
     ProcessLastHand();
-    //call log button clicked upon clicking log
-    log_button = document.getElementsByClassName("button-1 show-log-button small-button dark-gray")[0];
-    log_button.addEventListener("click", logButtonClicked, false);
 
     console.log('Poker Now Hand Grabber Running!');
   } else {
@@ -80,7 +79,7 @@ async function fetchLastLog() {
   let endP = data.indexOf("-- starting hand #", startP);
   endP = data.indexOf("}", endP);
   let log = data.substring(startP, endP);
-  if (!log.includes("ending hand") || !log.includes("starting hand") || !log.includes("(No Limit Texas Hold'em)")) {
+  if (!log.includes("ending hand") || !log.includes("starting hand")) {
     return;
   }
   return log;
@@ -103,15 +102,6 @@ function getTableID() {
   let startP = url.lastIndexOf("/") + 1;
   return url.substring(startP, url.length);
 }
-
-function disableDownloadShelf() {
-  browser.runtime.sendMessage({method: "disableDownloadShelf"});
-}
-
-function enableDownloadShelf() {
-  browser.runtime.sendMessage({method: "enableDownloadShelf"});
-}
-
 
 //observes the entire table to look for chips being added to a players stack to process the hand
 function createWinObserver() {
@@ -293,19 +283,19 @@ try {
       }
 
       function rollRNG(){
-      let roll_n = Math.round(Math.random()*100);
-      let gameinf = document.querySelector(".game-infos");
+        let roll_n = Math.round(Math.random()*100);
+        let gameinf = document.querySelector(".game-infos");
 
-      let a;
-      if ((a = gameinf.querySelector(".r-n-g"))) {
-        a.innerHTML = roll_n;
-      } else {
-        a = document.createElement("p");
-        a.className = "r-n-g";
-        a.innerHTML = roll_n;
-        a.style.color = "red";
-        gameinf.appendChild(a);
-      }
+        let a;
+        if ((a = gameinf.querySelector(".r-n-g"))) {
+          a.innerHTML = roll_n;
+        } else {
+          a = document.createElement("p");
+          a.className = "r-n-g";
+          a.innerHTML = roll_n;
+          a.style.color = "red";
+          gameinf.appendChild(a);
+        }
       }
 
       let raiseObs = new MutationObserver(function(muts){
@@ -317,7 +307,12 @@ try {
           });
         });
       });
-      raiseObs.observe(document.querySelector(".main-container"), {childList:true, subtree:true});
+      setTimeout(() => {
+        try {
+        raiseObs.observe(document.querySelector(".main-container"), {childList:true, subtree:true});
+        }
+        catch (e) { console.error(e) }
+      }, 1000);
     }
   }, err => {
       alert(err);
