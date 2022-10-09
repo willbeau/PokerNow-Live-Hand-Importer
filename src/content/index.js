@@ -322,3 +322,40 @@ try {
 catch(e) {
   alert(e)
 }
+
+// LIGHTNING MODE !
+// i.e. when host, and "Auto Start Next Hand" is disabled, this will auto next hand !
+
+const maxDelaySD = 2500; //milliseconds
+const nsdDelay = 300; //ms, non-showdown delay
+
+let hostNextHandObs = new MutationObserver(function(muts){
+  muts.forEach(m => {
+    m.addedNodes.forEach(n => {
+      if (!n.classList) { return; }
+      if (n.classList.contains("next-hand-button")){ 
+        let hostNextHandButton = document.querySelector(".next-hand-button");
+
+        setTimeout(() => {
+          if (document.querySelector(".table-player:not(.you-player) > .table-player-cards > .card-container.flipped")) {
+            //SHOWDOWN, wait a bit !
+            setTimeout(() => {
+              hostNextHandButton.click();
+            }, (maxDelaySD - nsdDelay));
+          } else {
+            //No showdown, end the hand !
+            hostNextHandButton.click();
+          }
+        }, nsdDelay);
+      }
+    });
+  });
+});
+setTimeout(() => {
+  try {
+    hostNextHandObs.observe(document.querySelector(".main-container > .table"), {childList:true, subtree:true});
+  }
+  catch (e) { console.error(e) }
+}, 5000);
+
+// END LIGHTNING MODE

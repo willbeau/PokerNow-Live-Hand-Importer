@@ -247,6 +247,15 @@ class Hand {
         this.output += "*** SUMMARY ***" + '\n';
         this.output += "Total pot: " + "$" + round(this.potSize,2) + " | Rake 0" + '\n';
 
+        // Show the board(s)
+        if (this.runTwice) {
+            this.output += "Hand was run twice\n";
+            this.output += `FIRST Board [${this.flop} ${this.turn} ${this.river}]\n`;
+            this.output += `SECOND Board [${this.secondFlop||this.flop} ${this.secondTurn||this.turn} ${this.secondRiver||this.river}\n`;
+        } else {
+            this.output += `Board [${this.flop} ${this.turn} ${this.river}]\n`;
+        }
+
         //go through each player and write summary
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
