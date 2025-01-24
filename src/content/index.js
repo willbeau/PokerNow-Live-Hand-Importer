@@ -327,7 +327,7 @@ catch(e) {
 // i.e. when host, and "Auto Start Next Hand" is disabled, this will auto next hand !
 
 const maxDelaySD = 2500; //milliseconds
-const nsdDelay = 300; //ms, non-showdown delay
+const nsdDelay = 800; //ms, non-showdown delay
 
 let hostNextHandObs = new MutationObserver(function(muts){
   muts.forEach(m => {
@@ -353,7 +353,7 @@ let hostNextHandObs = new MutationObserver(function(muts){
 });
 setTimeout(() => {
   try {
-    hostNextHandObs.observe(document.querySelector(".main-container > .table"), {childList:true, subtree:true});
+    hostNextHandObs.observe(document.querySelector(".table"), {childList:true, subtree:true});
   }
   catch (e) { console.error(e) }
 }, 5000);
