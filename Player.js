@@ -18,5 +18,13 @@ class Player{
     this.betSize = 0.0; //how much money player has already put into the pot on this street
     this.won = false;
     this.winAmount = 0.0;
+    this.missingSmallBlind = false;
+    this.ante = false;
+    this.anteAmount = 0.0;
+    this.uncalled = false;
+
+    this.allinFromAnte = false;
+    this.allinFromBB = false;
+    this.allinFromSB = false;
   }
 }
